@@ -5,8 +5,8 @@
     { "id": "s2", "slots": ["TIME", "TOPIC", "EVAL", "PUNCT", "EXT"], "weight": 3900, "style": "both", "example": "요즘 [키워드] 근황...jpg" },
     { "id": "s3", "slots": ["TOPIC", "GROUP", "EVAL", "PUNCT", "EXT"], "weight": 3400, "style": "both", "example": "[키워드] 남자 레전드...jpg" },
     { "id": "s4", "slots": ["TIME", "TOPIC", "GROUP", "EVAL", "PUNCT", "EXT"], "weight": 3000, "style": "concept", "example": "실시간 [키워드] 반응...gif" },
-    { "id": "s5", "slots": ["MOOD", "TOPIC", "NUM"], "weight": 4115, "style": "normal", "example": "싱글벙글 [키워드] 3" },
-    { "id": "s6", "slots": ["TOPIC", "NUM"], "weight": 3800, "style": "normal", "example": "[키워드] 1" },
+    { "id": "s5", "slots": ["MOOD", "TOPIC", "NUM", "NUMSUFFIX"], "weight": 4115, "style": "normal", "example": "싱글벙글 [키워드] 3탄" },
+    { "id": "s6", "slots": ["TOPIC", "NUM", "NUMSUFFIX"], "weight": 3800, "style": "normal", "example": "[키워드] 1부" },
     { "id": "s7", "slots": ["TOPIC", "PUNCT", "EXT"], "weight": 3500, "style": "both", "example": "[키워드]...jpg" },
     { "id": "s8", "slots": ["TOPIC", "EVAL", "EMOTE"], "weight": 3200, "style": "both", "example": "[키워드] 레전드ㅋㅋㅋ" },
     { "id": "s9", "slots": ["TAG", "TOPIC", "PUNCT"], "weight": 2259, "style": "concept", "example": "단독) [키워드]..." },
@@ -18,7 +18,7 @@
     { "id": "s15", "slots": ["TOPIC_EUN", "EVAL", "END"], "weight": 1100, "style": "both", "example": "[키워드]는 레전드?" },
     { "id": "s16", "slots": ["TAG", "TOPIC_I", "EVAL", "PUNCT", "EXT"], "weight": 1300, "style": "concept", "example": "충격) [키워드]가 이유...jpg" },
     { "id": "s17", "slots": ["MOOD", "TOPIC_REUL", "EMOTE"], "weight": 1200, "style": "normal", "example": "레알 [키워드]를ㅋㅋㅋ" },
-    { "id": "s18", "slots": ["TOPIC", "GROUP", "NUM"], "weight": 1100, "style": "normal", "example": "[키워드] 커플 2" },
+    { "id": "s18", "slots": ["TOPIC", "GROUP", "NUM", "NUMSUFFIX"], "weight": 1100, "style": "normal", "example": "[키워드] 커플 2부" },
     { "id": "s19", "slots": ["TOPIC", "VS"], "weight": 1800, "style": "both", "example": "[키워드] 예전 vs 지금" },
     { "id": "s20", "slots": ["TIME", "TOPIC", "VS"], "weight": 1300, "style": "both", "example": "요즘 [키워드] 기대 vs 실물" },
     { "id": "s21", "slots": ["QUOTE", "TOPIC", "EVAL"], "weight": 1500, "style": "both", "example": "'실화냐' [키워드] 반응" },
@@ -192,10 +192,13 @@
       { "w": "배", "weight": 28000 },
       { "w": "위", "weight": 24000 },
       { "w": "연속", "weight": 20000 },
+      { "w": "탄", "weight": 18000 },
       { "w": "번째", "weight": 17000 },
+      { "w": "부", "weight": 15000 },
       { "w": "회째", "weight": 14000 },
       { "w": "개월만에", "weight": 12000 },
-      { "w": "억", "weight": 10000 }
+      { "w": "억", "weight": 10000 },
+      { "w": "화", "weight": 6000 }
     ]
   },
   "keywordHeuristics": {
@@ -215,9 +218,20 @@
       "excludeSlots": [
         "GROUP"
       ]
+    },
+    {
+      "id": "numsuffix-hwa-personname-only",
+      "description": "'화'(방송/영상 회차 느낌의 접미사, 예: '3화')는 인명으로 추정되는 키워드에서만 등장하도록 제한한다. 한계: personName 휴리스틱이 순수 문자열 패턴(2~4자 한글 단독)이라 '국밥'처럼 실제로는 인명이 아닌 키워드도 통과시키고, 반대로 '한동훈 탄핵'처럼 공백이 섞인 이슈성 키워드는 정당한 경우조차 걸러낸다 — README '화 접미사 제한의 한계' 참고. 이 규칙만으로 완전히 막지 못하는 나머지는 '화'의 weight를 다른 접미사보다 낮게 둬서(6000, 최저) 노출 빈도를 줄이는 것으로 절충한다.",
+      "when": {
+        "keywordMatches": "personName",
+        "negate": true
+      },
+      "excludeWords": {
+        "NUMSUFFIX": ["화"]
+      }
     }
   ],
-  "_compatibilityRulesGuide": "새 규칙 추가법: keywordHeuristics에 정규식 하나를 등록하고, compatibilityRules에 { id, when:{keywordMatches:<휴리스틱 이름>}, excludeSlots:[<제외할 슬롯 이름들>] }을 추가하면 코드 수정 없이 적용됩니다. when을 생략하면 키워드와 무관하게 항상 적용되는 규칙(예: 특정 슬롯을 아예 쓰지 않기)이 됩니다. 여러 규칙이 동시에 매치되면 배제 목록은 합집합으로 누적됩니다. 규칙 적용 후 구조가 하나도 안 남으면 안전장치로 규칙을 무시하고 원래 후보군을 그대로 씁니다.",
+  "_compatibilityRulesGuide": "새 규칙 추가법: keywordHeuristics에 정규식 하나를 등록하고, compatibilityRules에 { id, when:{keywordMatches:<휴리스틱 이름>}, excludeSlots:[<제외할 슬롯 이름들>] }을 추가하면 코드 수정 없이 적용됩니다. when을 생략하면 키워드와 무관하게 항상 적용되는 규칙(예: 특정 슬롯을 아예 쓰지 않기)이 됩니다. when.negate:true를 추가하면 조건이 반전됩니다('키워드가 이 휴리스틱에 매치되지 않을 때'). excludeSlots 대신(또는 함께) excludeWords:{ 슬롯이름: [단어, ...] }를 쓰면 슬롯 전체가 아니라 그 슬롯 안의 특정 단어만 배제할 수 있습니다(예: NUMSUFFIX 슬롯에서 '화'라는 단어 하나만). 여러 규칙이 동시에 매치되면 배제 목록은 합집합으로 누적됩니다. excludeSlots 규칙 적용 후 구조가 하나도 안 남으면, excludeWords 규칙 적용 후 단어가 하나도 안 남으면 각각 안전장치로 규칙을 무시하고 원래 후보군을 그대로 씁니다.",
   "scoring": {
     "base": 40,
     "bonus": {

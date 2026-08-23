@@ -28,7 +28,7 @@
   - 인라인 스크립트를 직접 수정한 경우 sha256 해시가 바뀌므로, 아래 meta 태그의 해시값을 다시 계산해서 갱신해야
     페이지 스크립트가 정상 동작합니다(README.md 참고).
 -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-WcTc3vmnIZoDY1gOsgcl3x7xR/nyginQPSPTRgL9960=' 'sha256-EyJLTmvrTNLwZk166/hDQA716FPzuFNplOyNnpSbRSA=' 'sha256-eAGJFs9zev0UAJJpxuIL+8BCj56fgg7YCrGv8TFbL2E='; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://gi.esmplus.com https://*.coupangcdn.com; connect-src 'self'; base-uri 'none'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-WcTc3vmnIZoDY1gOsgcl3x7xR/nyginQPSPTRgL9960=' 'sha256-EyJLTmvrTNLwZk166/hDQA716FPzuFNplOyNnpSbRSA=' 'sha256-Cp4e7HAMyHGrCEaokIEPo3DpqpdePabZI6H7NFPGs9E='; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://gi.esmplus.com https://*.coupangcdn.com; connect-src 'self'; base-uri 'none'; form-action 'self'">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -606,7 +606,7 @@ function pickStructure(pool, usageCount, avoidSet) {
   return pool[pool.length - 1];
 }
 
-function buildCandidate(structure, patterns, keyword, options) {
+function buildCandidate(structure, patterns, keyword, options, excludedWords) {
   var chosen = [];
   for (var i = 0; i < structure.slots.length; i++) {
     var slot = structure.slots[i];
@@ -621,6 +621,11 @@ function buildCandidate(structure, patterns, keyword, options) {
     } else {
       var list = patterns.slots && patterns.slots[slot];
       if (!list || !list.length) continue;
+      if (excludedWords && excludedWords[slot]) {
+        var allowedList = list.filter(function (w) { return !excludedWords[slot][w.w]; });
+        // 규칙 적용 후 이 슬롯에 남는 단어가 하나도 없으면 안전장치로 규칙을 무시한다.
+        if (allowedList.length) list = allowedList;
+      }
       var picked = weightedPickFromList(list);
       chosen.push({ slot: slot, text: picked.w, weight: picked.weight, attach: !!ATTACH_SLOTS[slot] });
     }
@@ -712,23 +717,25 @@ function scoreCandidate(candidate, patterns, pool) {
   return { score: score, reasons: reasons };
 }
 
+function ruleApplies(rule, keyword, patterns) {
+  if (!rule.when || !rule.when.keywordMatches) return true; // when 생략 = 항상 적용
+  var h = (patterns.keywordHeuristics || {})[rule.when.keywordMatches];
+  var matched = false;
+  if (h && h.pattern) {
+    try { matched = new RegExp(h.pattern).test(keyword); } catch (e) { matched = false; }
+  }
+  return rule.when.negate ? !matched : matched;
+}
+
 function applyCompatibilityRules(pool, keyword, patterns) {
   var rules = patterns.compatibilityRules || [];
-  var heuristics = patterns.keywordHeuristics || {};
   if (!rules.length) return pool;
 
   var excluded = {};
   for (var i = 0; i < rules.length; i++) {
     var rule = rules[i];
-    var applies = true;
-    if (rule.when && rule.when.keywordMatches) {
-      var h = heuristics[rule.when.keywordMatches];
-      applies = false;
-      if (h && h.pattern) {
-        try { applies = new RegExp(h.pattern).test(keyword); } catch (e) { applies = false; }
-      }
-    }
-    if (applies && rule.excludeSlots) {
+    if (!ruleApplies(rule, keyword, patterns)) continue;
+    if (rule.excludeSlots) {
       for (var j = 0; j < rule.excludeSlots.length; j++) excluded[rule.excludeSlots[j]] = true;
     }
   }
@@ -739,6 +746,22 @@ function applyCompatibilityRules(pool, keyword, patterns) {
   });
   // 규칙 적용 후 후보가 하나도 안 남으면 안전장치로 규칙을 무시한다.
   return filtered.length ? filtered : pool;
+}
+
+function computeExcludedWords(keyword, patterns) {
+  var rules = patterns.compatibilityRules || [];
+  var excludedWords = {}; // { SLOT_NAME: { word: true } }
+  for (var i = 0; i < rules.length; i++) {
+    var rule = rules[i];
+    if (!rule.excludeWords) continue;
+    if (!ruleApplies(rule, keyword, patterns)) continue;
+    for (var slotName in rule.excludeWords) {
+      if (!excludedWords[slotName]) excludedWords[slotName] = {};
+      var words = rule.excludeWords[slotName];
+      for (var k = 0; k < words.length; k++) excludedWords[slotName][words[k]] = true;
+    }
+  }
+  return excludedWords;
 }
 
 function generateTitles(keyword, options, patterns) {
@@ -760,6 +783,8 @@ function generateTitles(keyword, options, patterns) {
   }
   if (!pool.length || !keyword) return [];
 
+  var excludedWords = computeExcludedWords(keyword, patterns);
+
   var avoidSet = {};
   if (options.avoidStructureIds) {
     for (var a = 0; a < options.avoidStructureIds.length; a++) avoidSet[options.avoidStructureIds[a]] = true;
@@ -777,7 +802,7 @@ function generateTitles(keyword, options, patterns) {
   while (results.length < count && attempts < maxAttempts) {
     attempts++;
     var structure = pickStructure(pool, usageCount, avoidSet);
-    var candidate = buildCandidate(structure, patterns, keyword, options);
+    var candidate = buildCandidate(structure, patterns, keyword, options, excludedWords);
     if (!candidate.title || seen[candidate.title]) continue;
     var scored = scoreCandidate(candidate, patterns, pool);
     seen[candidate.title] = true;
