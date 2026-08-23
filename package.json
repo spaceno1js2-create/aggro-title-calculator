@@ -1,0 +1,10 @@
+{
+  "name": "agro-title-calc",
+  "private": true,
+  "version": "1.0.0",
+  "description": "어그로 제목 계산기 - 서버 없는 정적 단일 페이지 앱",
+  "scripts": {
+    "verify": "node tools/verify-csp.js",
+    "quality": "node tools/validate-quality.js"
+  }
+}

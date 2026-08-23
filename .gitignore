@@ -1,0 +1,12 @@
+# 로컬 개발/QA 전용 — 배포되는 정적 사이트와 무관 (README '파일 구성' 참고)
+tools/
+reports/
+
+# 의존성 (현재 package.json엔 dependencies가 없어 실제로 생기지 않지만, 향후 대비)
+node_modules/
+
+# OS/에디터 잡파일
+.DS_Store
+Thumbs.db
+*.log
+.env

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://aggrotitle.com/sitemap.xml

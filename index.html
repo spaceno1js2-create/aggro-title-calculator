@@ -1,0 +1,1030 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>어그로 제목 계산기 - 클릭률 높은 제목 자동 생성기</title>
+<meta name="description" content="키워드 하나만 입력하면 국내 커뮤니티 제목 300만 건 분석 패턴으로 클릭률 높은 어그로 제목 후보를 자동 생성하고 0~100점으로 점수화합니다. 서버 없이 브라우저에서 즉시 계산.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://aggrotitle.com/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="어그로 제목 계산기 - 클릭률 높은 제목 자동 생성기">
+<meta property="og:description" content="키워드 하나로 클릭률 높은 커뮤니티 제목 후보를 자동 생성하고 점수화하는 무료 계산기.">
+<meta property="og:url" content="https://aggrotitle.com/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="어그로 제목 계산기">
+<meta name="twitter:description" content="키워드 하나로 클릭률 높은 커뮤니티 제목 후보를 자동 생성하고 점수화하는 무료 계산기.">
+<!--
+  CSP 안내:
+  - script-src는 'self'와, 이 문서의 인라인 스크립트 블록 3개(JSON-LD 2개 + 본문 로직 1개)만 허용하는
+    sha256 해시로 제한되어 있습니다(별도 unsafe-inline 없음).
+    광고 스크립트(예: Google AdSense: pagead2.googlesyndication.com, googleads.g.doubleclick.net,
+    partner.googleadservices.com / 애드핏: t1.daumcdn.net)를 추가하려면 해당 스크립트 도메인을
+    script-src에 추가하고, 광고 네트워크가 요구하는 img-src/connect-src/frame-src 도메인도 함께 추가해야 합니다.
+  - 인라인 스크립트를 직접 수정한 경우 sha256 해시가 바뀌므로, 아래 meta 태그의 해시값을 다시 계산해서 갱신해야
+    페이지 스크립트가 정상 동작합니다(README.md 참고).
+-->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-WcTc3vmnIZoDY1gOsgcl3x7xR/nyginQPSPTRgL9960=' 'sha256-EyJLTmvrTNLwZk166/hDQA716FPzuFNplOyNnpSbRSA=' 'sha256-/0tJD5DAjCFz2TqciiOaYwwNEyeD/hgr9mWbxWoieu4='; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'self'">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "어그로 제목 계산기",
+  "url": "https://aggrotitle.com/",
+  "description": "키워드 하나로 국내 커뮤니티 제목 패턴을 조합해 클릭률 높은 제목 후보를 생성하고 점수화하는 무료 웹 도구.",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Any",
+  "browserRequirements": "Requires JavaScript",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "KRW" },
+  "inLanguage": "ko"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "어그로 제목이란 무엇인가요?",
+      "acceptedAnswer": { "@type": "Answer", "text": "어그로 제목은 클릭(주목)을 유도하기 위해 국내 온라인 커뮤니티에서 널리 쓰이는 제목 형식을 뜻합니다. 명사를 나열하고 끝에 구두점과 확장자를 붙이거나, 숫자·자음을 활용하는 등 정해진 패턴이 반복적으로 관찰됩니다." }
+    },
+    {
+      "@type": "Question",
+      "name": "점수는 어떻게 계산되나요?",
+      "acceptedAnswer": { "@type": "Answer", "text": "제목의 품사 구조 가중치와 각 단어의 누적 주목도 가중치를 조합한 값을 0~100점으로 정규화합니다. 확장자·숫자·말줄임표·의문형 같은 요소가 있으면 가산점을, 제목이 지나치게 길면 감점을 적용합니다." }
+    },
+    {
+      "@type": "Question",
+      "name": "왜 제목 끝에 .jpg를 붙이나요?",
+      "acceptedAnswer": { "@type": "Answer", "text": "제목 끝의 ...jpg, ...gif는 이미지나 짤이 첨부되어 있다는 신호로 받아들여져 클릭 유도 효과가 크다는 점이 실제 커뮤니티 제목 데이터 분석에서 확인되었습니다." }
+    },
+    {
+      "@type": "Question",
+      "name": "개념글과 일반글 계열의 차이는 무엇인가요?",
+      "acceptedAnswer": { "@type": "Answer", "text": "개념글 계열은 조회수 대비 주목도 총합이 높은 단어(근황, 레전드, 논란 등) 중심이고, 일반글 계열은 상대적 주목도 증가폭이 큰 단어(짤, 인증, 싱글벙글 등) 중심입니다. 혼합을 선택하면 두 계열을 함께 사용합니다." }
+    },
+    {
+      "@type": "Question",
+      "name": "이 계산기는 서버에 데이터를 전송하나요?",
+      "acceptedAnswer": { "@type": "Answer", "text": "전송하지 않습니다. 모든 계산은 브라우저 안에서만 실행되는 정적 페이지이며, 외부 크롤링이나 API 호출 없이 patterns.json 데이터만 불러와 사용합니다." }
+    }
+  ]
+}
+</script>
+<style>
+:root {
+  --bg: #ffffff;
+  --bg-alt: #f8f9fa;
+  --border: #dadce0;
+  --text: #202124;
+  --text-secondary: #5f6368;
+  --accent: #1a73e8;
+  --accent-hover: #1558b0;
+  --card-bg: #ffffff;
+  --focus-ring: #1a73e8;
+  --red: #d93025;
+  --red-bg: #fce8e6;
+  --orange: #e8710a;
+  --orange-bg: #fef2e2;
+  --yellow: #a06800;
+  --yellow-bg: #fef7e0;
+  --gray: #5f6368;
+  --gray-bg: #f1f3f4;
+  --ad-bg: #f1f3f4;
+  --ad-text: #9aa0a6;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #202124;
+    --bg-alt: #26272b;
+    --border: #3c4043;
+    --text: #e8eaed;
+    --text-secondary: #9aa0a6;
+    --card-bg: #2b2c30;
+    --accent: #8ab4f8;
+    --accent-hover: #aecbfa;
+    --red: #f28b82;
+    --red-bg: #3c2320;
+    --orange: #fcad70;
+    --orange-bg: #3a2c17;
+    --yellow: #fdd663;
+    --yellow-bg: #3a3117;
+    --gray: #9aa0a6;
+    --gray-bg: #35363a;
+    --ad-bg: #2b2c30;
+    --ad-text: #5f6368;
+  }
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+a { color: var(--accent); }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+header.site-header {
+  border-bottom: 1px solid var(--border);
+  padding: 20px 0;
+}
+header.site-header h1 {
+  font-size: 22px;
+  margin: 0 0 4px;
+  font-weight: 700;
+}
+header.site-header p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+.ad-slot {
+  background: var(--ad-bg);
+  color: var(--ad-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  margin: 16px 0;
+}
+.ad-top, .ad-bottom { min-height: 90px; }
+.ad-side { min-height: 250px; width: 100%; }
+.layout {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  margin-top: 8px;
+}
+.content { flex: 1 1 auto; min-width: 0; }
+aside.sidebar { width: 300px; flex: 0 0 300px; }
+@media (max-width: 768px) {
+  .layout { flex-direction: column; }
+  aside.sidebar { width: 100%; flex-basis: auto; }
+}
+section.panel {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  background: var(--card-bg);
+}
+.input-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+#keywordInput {
+  flex: 1 1 240px;
+  min-width: 0;
+  padding: 12px 14px;
+  font-size: 16px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 44px;
+}
+#keywordInput:focus, button:focus-visible, input[type="radio"]:focus-visible, input[type="checkbox"]:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+button {
+  font-family: inherit;
+  font-size: 15px;
+  cursor: pointer;
+}
+#calcBtn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0 22px;
+  min-height: 44px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+#calcBtn:hover { background: var(--accent-hover); }
+#calcBtn:disabled { opacity: .6; cursor: default; }
+.error-msg {
+  color: var(--red);
+  font-size: 13px;
+  margin: 8px 0 0;
+  min-height: 18px;
+}
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 16px;
+  align-items: center;
+}
+fieldset.style-group {
+  border: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+fieldset.style-group legend {
+  font-size: 13px;
+  color: var(--text-secondary);
+  padding: 0;
+  margin-bottom: 6px;
+  width: 100%;
+}
+.radio-item, .check-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+}
+.radio-item input, .check-item input { width: 18px; height: 18px; }
+.radio-item label, .check-item label { cursor: pointer; }
+#resultsSection h2, #faqSection h2 { font-size: 17px; margin: 0 0 12px; }
+#resultsRegion { min-height: 60px; }
+.loading-text {
+  color: var(--text-secondary);
+  padding: 24px 0;
+  text-align: center;
+  font-size: 14px;
+}
+.skeleton-card {
+  height: 76px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  background: linear-gradient(90deg, var(--bg-alt) 25%, var(--gray-bg) 37%, var(--bg-alt) 63%);
+  background-size: 400% 100%;
+  animation: skeleton-shine 1.4s ease infinite;
+}
+@keyframes skeleton-shine {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+.result-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 10px;
+  background: var(--card-bg);
+  flex-wrap: wrap;
+}
+.score-badge {
+  flex: 0 0 auto;
+  min-width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 15px;
+}
+.score-badge.tier-red { background: var(--red-bg); color: var(--red); }
+.score-badge.tier-orange { background: var(--orange-bg); color: var(--orange); }
+.score-badge.tier-yellow { background: var(--yellow-bg); color: var(--yellow); }
+.score-badge.tier-gray { background: var(--gray-bg); color: var(--gray); }
+.result-main { flex: 1 1 220px; min-width: 0; }
+.result-title {
+  margin: 6px 0 8px;
+  font-size: 16px;
+  font-weight: 600;
+  word-break: break-word;
+}
+.reason-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.reason-tag {
+  font-size: 12px;
+  background: var(--bg-alt);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+.copy-btn {
+  flex: 0 0 auto;
+  min-height: 44px;
+  min-width: 64px;
+  background: var(--bg-alt);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0 14px;
+}
+.copy-btn:hover { background: var(--gray-bg); }
+.copy-btn.copied { background: var(--red-bg); color: var(--red); border-color: var(--red-bg); }
+.results-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+.secondary-btn {
+  background: var(--bg-alt);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0 20px;
+  min-height: 44px;
+}
+.secondary-btn:hover { background: var(--gray-bg); }
+.secondary-btn:disabled { opacity: .6; cursor: default; }
+.secondary-btn[hidden] { display: none; }
+.data-notice {
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-top: 16px;
+}
+#faqSection dt { font-weight: 600; margin-top: 14px; }
+#faqSection dd { margin: 4px 0 0; color: var(--text-secondary); }
+footer.site-footer {
+  border-top: 1px solid var(--border);
+  padding: 20px 0 40px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  text-align: center;
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="site-header">
+    <h1>어그로 제목 계산기</h1>
+    <p>키워드 하나로 클릭률 높은 커뮤니티 어그로 제목 후보를 만들고 0~100점으로 계산합니다.</p>
+  </header>
+
+  <!-- ===== 상단 광고 (728x90 / 모바일 320x100) — 이 div 안에 광고 스크립트 삽입 ===== -->
+  <div class="ad-slot ad-top" id="adTop" aria-hidden="true">광고 영역 (728x90)</div>
+  <!-- ===== 상단 광고 끝 ===== -->
+
+  <div class="layout">
+    <main class="content">
+      <section class="panel" id="inputSection">
+        <form id="calcForm" autocomplete="off">
+          <label for="keywordInput" class="visually-hidden">키워드 입력</label>
+          <div class="input-row">
+            <input type="text" id="keywordInput" name="q" maxlength="40" placeholder="키워드를 입력하세요 (예: 아이유, 강아지, 신입사원)" aria-describedby="inputError">
+            <button type="submit" id="calcBtn">제목 계산</button>
+          </div>
+          <p class="error-msg" id="inputError" role="alert"></p>
+
+          <div class="options-row">
+            <fieldset class="style-group">
+              <legend>제목 계열</legend>
+              <span class="radio-item">
+                <input type="radio" name="style" id="styleConcept" value="concept">
+                <label for="styleConcept">개념글</label>
+              </span>
+              <span class="radio-item">
+                <input type="radio" name="style" id="styleNormal" value="normal">
+                <label for="styleNormal">일반글</label>
+              </span>
+              <span class="radio-item">
+                <input type="radio" name="style" id="styleMixed" value="mixed" checked>
+                <label for="styleMixed">혼합</label>
+              </span>
+            </fieldset>
+            <span class="check-item">
+              <input type="checkbox" id="extCheckbox">
+              <label for="extCheckbox">짤 확장자 붙이기 (.jpg/.gif)</label>
+            </span>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel" id="resultsSection" aria-labelledby="resultsHeading">
+        <h2 id="resultsHeading">계산 결과</h2>
+        <div id="resultsRegion" aria-live="polite"></div>
+        <div class="results-actions">
+          <button type="button" id="loadMoreBtn" class="secondary-btn" hidden aria-label="제목 8개 더 보기">더 보기</button>
+          <button type="button" id="reshuffleBtn" class="secondary-btn" hidden aria-label="같은 키워드로 제목 다시 뽑기">다시 뽑기</button>
+        </div>
+        <p class="data-notice" id="dataNotice" hidden></p>
+      </section>
+
+      <section class="panel" id="faqSection">
+        <h2>자주 묻는 질문</h2>
+        <dl>
+          <dt>어그로 제목이란 무엇인가요?</dt>
+          <dd>어그로 제목은 클릭(주목)을 유도하기 위해 국내 온라인 커뮤니티에서 널리 쓰이는 제목 형식을 뜻합니다. 명사를 나열하고 끝에 구두점과 확장자를 붙이거나, 숫자·자음을 활용하는 등 정해진 패턴이 반복적으로 관찰됩니다.</dd>
+          <dt>점수는 어떻게 계산되나요?</dt>
+          <dd>제목의 품사 구조 가중치와 각 단어의 누적 주목도 가중치를 조합한 값을 0~100점으로 정규화합니다. 확장자·숫자·말줄임표·의문형 같은 요소가 있으면 가산점을, 제목이 지나치게 길면 감점을 적용합니다.</dd>
+          <dt>왜 제목 끝에 .jpg를 붙이나요?</dt>
+          <dd>제목 끝의 ...jpg, ...gif는 이미지나 짤이 첨부되어 있다는 신호로 받아들여져 클릭 유도 효과가 크다는 점이 실제 커뮤니티 제목 데이터 분석에서 확인되었습니다.</dd>
+          <dt>개념글과 일반글 계열의 차이는 무엇인가요?</dt>
+          <dd>개념글 계열은 조회수 대비 주목도 총합이 높은 단어(근황, 레전드, 논란 등) 중심이고, 일반글 계열은 상대적 주목도 증가폭이 큰 단어(짤, 인증, 싱글벙글 등) 중심입니다. 혼합을 선택하면 두 계열을 함께 사용합니다.</dd>
+          <dt>이 계산기는 서버에 데이터를 전송하나요?</dt>
+          <dd>전송하지 않습니다. 모든 계산은 브라우저 안에서만 실행되는 정적 페이지이며, 외부 크롤링이나 API 호출 없이 patterns.json 데이터만 불러와 사용합니다.</dd>
+        </dl>
+      </section>
+    </main>
+
+    <aside class="sidebar">
+      <!-- ===== 우측 사이드바 광고 (300x250) — 768px 미만에서는 본문 하단으로 이동 ===== -->
+      <div class="ad-slot ad-side" id="adSide" aria-hidden="true">광고 영역 (300x250)</div>
+      <!-- ===== 사이드바 광고 끝 ===== -->
+    </aside>
+  </div>
+
+  <!-- ===== 하단 광고 (728x90) ===== -->
+  <div class="ad-slot ad-bottom" id="adBottom" aria-hidden="true">광고 영역 (728x90)</div>
+  <!-- ===== 하단 광고 끝 ===== -->
+
+  <footer class="site-footer">
+    <p>어그로 제목 계산기 — 모든 계산은 브라우저에서 실행되며 서버로 전송되지 않습니다.</p>
+  </footer>
+</div>
+
+<script>
+"use strict";
+// PURE-LOGIC-START (tools/validate-quality.js가 이 마커 사이 코드만 추출해 Node에서 테스트합니다. 이동/삭제 시 스크립트도 함께 수정할 것)
+
+var ATTACH_SLOTS = { PUNCT: true, EXT: true, END: true, EMOTE: true, NUMSUFFIX: true };
+
+var FALLBACK_PATTERNS = {
+  structures: [
+    { id: "f1", slots: ["TOPIC", "EVAL", "PUNCT", "EXT"], weight: 9000, style: "both" },
+    { id: "f2", slots: ["TIME", "TOPIC", "EVAL", "PUNCT", "EXT"], weight: 8000, style: "both" },
+    { id: "f3", slots: ["MOOD", "TOPIC", "NUM"], weight: 4000, style: "normal" },
+    { id: "f4", slots: ["TOPIC", "NUM"], weight: 3500, style: "normal" },
+    { id: "f5", slots: ["TOPIC", "PUNCT", "EXT"], weight: 3000, style: "both" },
+    { id: "f6", slots: ["TAG", "TOPIC", "PUNCT"], weight: 2000, style: "concept" }
+  ],
+  slots: {
+    TIME: [ { w: "실시간", weight: 110000 }, { w: "요즘", weight: 130000 }, { w: "오늘", weight: 120000 } ],
+    EVAL: [ { w: "근황", weight: 400000 }, { w: "레전드", weight: 270000 }, { w: "반응", weight: 130000 }, { w: "논란", weight: 120000 } ],
+    MOOD: [ { w: "싱글벙글", weight: 5000 }, { w: "재업", weight: 100000 }, { w: "인증", weight: 7000 } ],
+    TAG:  [ { w: "단독)", weight: 30000 }, { w: "(펌)", weight: 12000 } ],
+    EXT:  [ { w: "jpg", weight: 2900000 }, { w: "gif", weight: 280000 } ],
+    PUNCT:[ { w: "...", weight: 140000 }, { w: "..", weight: 80000 } ],
+    NUM:  [ { w: "1", weight: 30000 }, { w: "2", weight: 22000 }, { w: "3", weight: 18000 } ]
+  },
+  scoring: {
+    base: 40,
+    bonus: { has_ext: 18, has_number: 10, has_ellipsis: 8, has_question: 7, has_emote: 6, has_tag: 9 },
+    penalty: { over_length: { threshold: 32, per_char: 1.2 } },
+    max: 100
+  },
+  reason_labels: {
+    has_ext: "짤 첨부 신호(확장자)",
+    has_number: "숫자 포함 구조",
+    has_ellipsis: "말줄임표로 궁금증 유발",
+    has_question: "의문형",
+    has_emote: "감정 자음",
+    has_tag: "말머리 강조",
+    high_word: "고주목도 단어 포함",
+    over_length: "제목이 길어 감점"
+  }
+};
+
+function sanitizeKeyword(raw) {
+  if (typeof raw !== "string") return "";
+  var s = raw.replace(/[\x00-\x1F\x7F]/g, "");
+  s = s.replace(/[^가-힣ㄱ-ㆎa-zA-Z0-9 .,!?()~'"\-]/g, "");
+  s = s.replace(/\s+/g, " ").trim();
+  if (s.length > 40) s = s.slice(0, 40);
+  return s;
+}
+
+function hasBatchim(ch) {
+  if (!ch) return null;
+  var code = ch.charCodeAt(0);
+  if (code < 0xAC00 || code > 0xD7A3) return null;
+  return (code - 0xAC00) % 28 !== 0;
+}
+function lastChar(word) {
+  var t = (word || "").trim();
+  return t.length ? t[t.length - 1] : "";
+}
+function josaEunNeun(word) {
+  var b = hasBatchim(lastChar(word));
+  return b === null ? "는" : (b ? "은" : "는");
+}
+function josaIGa(word) {
+  var b = hasBatchim(lastChar(word));
+  return b === null ? "가" : (b ? "이" : "가");
+}
+function josaEulReul(word) {
+  var b = hasBatchim(lastChar(word));
+  return b === null ? "를" : (b ? "을" : "를");
+}
+
+function weightedPickFromList(list) {
+  var total = 0, i;
+  for (i = 0; i < list.length; i++) total += (list[i].weight > 0 ? list[i].weight : 0);
+  if (total <= 0) return list[Math.floor(Math.random() * list.length)];
+  var r = Math.random() * total;
+  for (i = 0; i < list.length; i++) {
+    r -= (list[i].weight > 0 ? list[i].weight : 0);
+    if (r <= 0) return list[i];
+  }
+  return list[list.length - 1];
+}
+
+var STRUCTURE_DECAY_BASE = 15;   // 배치 내 재사용 감쇠: weight / DECAY_BASE^(이 배치에서 이미 쓴 횟수)
+var CROSS_RUN_AVOID_FACTOR = 0.08; // 직전 배치에서 쓴 구조에 곱하는 배율(1에 가까울수록 회피 약함)
+
+function pickStructure(pool, usageCount, avoidSet) {
+  var weights = pool.map(function (s) {
+    var used = usageCount[s.id] || 0;
+    var w = s.weight / Math.pow(STRUCTURE_DECAY_BASE, used);
+    if (avoidSet && avoidSet[s.id]) w *= CROSS_RUN_AVOID_FACTOR;
+    return w;
+  });
+  var total = weights.reduce(function (a, b) { return a + b; }, 0);
+  var r = Math.random() * total;
+  for (var i = 0; i < pool.length; i++) {
+    r -= weights[i];
+    if (r <= 0) return pool[i];
+  }
+  return pool[pool.length - 1];
+}
+
+function buildCandidate(structure, patterns, keyword, options) {
+  var chosen = [];
+  for (var i = 0; i < structure.slots.length; i++) {
+    var slot = structure.slots[i];
+    if (slot === "TOPIC") {
+      chosen.push({ slot: slot, text: keyword, weight: 0, attach: false });
+    } else if (slot === "TOPIC_EUN") {
+      chosen.push({ slot: slot, text: keyword + josaEunNeun(keyword), weight: 0, attach: false });
+    } else if (slot === "TOPIC_I") {
+      chosen.push({ slot: slot, text: keyword + josaIGa(keyword), weight: 0, attach: false });
+    } else if (slot === "TOPIC_REUL") {
+      chosen.push({ slot: slot, text: keyword + josaEulReul(keyword), weight: 0, attach: false });
+    } else {
+      var list = patterns.slots && patterns.slots[slot];
+      if (!list || !list.length) continue;
+      var picked = weightedPickFromList(list);
+      chosen.push({ slot: slot, text: picked.w, weight: picked.weight, attach: !!ATTACH_SLOTS[slot] });
+    }
+  }
+
+  if (options.forceExt && structure.slots.indexOf("EXT") === -1) {
+    var extList = (patterns.slots.EXT || []).filter(function (w) { return w.w === "jpg" || w.w === "gif"; });
+    var extPool = extList.length ? extList : (patterns.slots.EXT || []);
+    if (extPool.length) {
+      var punctList = patterns.slots.PUNCT || [];
+      if (punctList.length) {
+        var p = weightedPickFromList(punctList);
+        chosen.push({ slot: "PUNCT", text: p.w, weight: p.weight, attach: true });
+      }
+      var e = weightedPickFromList(extPool);
+      chosen.push({ slot: "EXT", text: e.w, weight: e.weight, attach: true });
+    }
+  }
+
+  var title = "";
+  for (var j = 0; j < chosen.length; j++) {
+    var c = chosen[j];
+    if (c.attach && title.length) title += c.text;
+    else title += (title.length ? " " : "") + c.text;
+  }
+
+  return { structure: structure, chosen: chosen, title: title };
+}
+
+function scoreCandidate(candidate, patterns, pool) {
+  var scoring = patterns.scoring || {};
+  var maxStructureWeight = pool.reduce(function (m, s) { return Math.max(m, s.weight); }, 1);
+  var structureRatio = candidate.structure.weight / maxStructureWeight;
+
+  var wordSum = 0, maxWordSum = 0, i;
+  for (i = 0; i < candidate.chosen.length; i++) {
+    var c = candidate.chosen[i];
+    if (!c.weight) continue;
+    wordSum += c.weight;
+    var list = patterns.slots[c.slot];
+    if (list && list.length) {
+      maxWordSum += list.reduce(function (m, w) { return Math.max(m, w.weight); }, 0);
+    }
+  }
+  var wordRatio = maxWordSum > 0 ? wordSum / maxWordSum : 0;
+  var combinedRatio = 0.4 * structureRatio + 0.6 * wordRatio;
+
+  var slotsUsed = {};
+  for (i = 0; i < candidate.chosen.length; i++) slotsUsed[candidate.chosen[i].slot] = true;
+
+  var reasons = [];
+  var bonus = 0;
+  var b = scoring.bonus || {};
+  if (slotsUsed.EXT) { bonus += (b.has_ext || 0); reasons.push("has_ext"); }
+  if (slotsUsed.NUM) { bonus += (b.has_number || 0); reasons.push("has_number"); }
+  if (slotsUsed.PUNCT) { bonus += (b.has_ellipsis || 0); reasons.push("has_ellipsis"); }
+  if (candidate.title.indexOf("?") !== -1) { bonus += (b.has_question || 0); reasons.push("has_question"); }
+  if (slotsUsed.EMOTE) { bonus += (b.has_emote || 0); reasons.push("has_emote"); }
+  if (slotsUsed.TAG) { bonus += (b.has_tag || 0); reasons.push("has_tag"); }
+  if (wordRatio >= 0.75) reasons.push("high_word");
+
+  var score = (scoring.base || 0) + combinedRatio * 35 + bonus;
+
+  var overCfg = scoring.penalty && scoring.penalty.over_length;
+  if (overCfg && candidate.title.length > overCfg.threshold) {
+    score -= (candidate.title.length - overCfg.threshold) * overCfg.per_char;
+    reasons.push("over_length");
+  }
+
+  var max = scoring.max || 100;
+  score = Math.max(0, Math.min(max, Math.round(score)));
+
+  return { score: score, reasons: reasons };
+}
+
+function applyCompatibilityRules(pool, keyword, patterns) {
+  var rules = patterns.compatibilityRules || [];
+  var heuristics = patterns.keywordHeuristics || {};
+  if (!rules.length) return pool;
+
+  var excluded = {};
+  for (var i = 0; i < rules.length; i++) {
+    var rule = rules[i];
+    var applies = true;
+    if (rule.when && rule.when.keywordMatches) {
+      var h = heuristics[rule.when.keywordMatches];
+      applies = false;
+      if (h && h.pattern) {
+        try { applies = new RegExp(h.pattern).test(keyword); } catch (e) { applies = false; }
+      }
+    }
+    if (applies && rule.excludeSlots) {
+      for (var j = 0; j < rule.excludeSlots.length; j++) excluded[rule.excludeSlots[j]] = true;
+    }
+  }
+  if (!Object.keys(excluded).length) return pool;
+
+  var filtered = pool.filter(function (s) {
+    return !s.slots.some(function (slot) { return excluded[slot]; });
+  });
+  // 규칙 적용 후 후보가 하나도 안 남으면 안전장치로 규칙을 무시한다.
+  return filtered.length ? filtered : pool;
+}
+
+function generateTitles(keyword, options, patterns) {
+  var count = options.count || 8;
+  var allStructures = patterns.structures || [];
+  var pool = allStructures.filter(function (s) {
+    if (options.style === "concept") return s.style === "concept" || s.style === "both";
+    if (options.style === "normal") return s.style === "normal" || s.style === "both";
+    return true;
+  });
+  if (!pool.length) pool = allStructures;
+  pool = applyCompatibilityRules(pool, keyword, patterns);
+  if (!pool.length || !keyword) return [];
+
+  var avoidSet = {};
+  if (options.avoidStructureIds) {
+    for (var a = 0; a < options.avoidStructureIds.length; a++) avoidSet[options.avoidStructureIds[a]] = true;
+  }
+
+  var usageCount = {};
+  var seen = {};
+  if (options.excludeTitles) {
+    for (var t = 0; t < options.excludeTitles.length; t++) seen[options.excludeTitles[t]] = true;
+  }
+  var results = [];
+  var maxAttempts = count * 30;
+  var attempts = 0;
+
+  while (results.length < count && attempts < maxAttempts) {
+    attempts++;
+    var structure = pickStructure(pool, usageCount, avoidSet);
+    var candidate = buildCandidate(structure, patterns, keyword, options);
+    if (!candidate.title || seen[candidate.title]) continue;
+    var scored = scoreCandidate(candidate, patterns, pool);
+    seen[candidate.title] = true;
+    usageCount[structure.id] = (usageCount[structure.id] || 0) + 1;
+    results.push({ title: candidate.title, score: scored.score, reasons: scored.reasons, structureId: structure.id });
+  }
+
+  results.sort(function (a, b) { return b.score - a.score; });
+  return results;
+}
+// PURE-LOGIC-END
+
+var state = {
+  patterns: null,
+  usedFallback: false,
+  lastKeyword: "",
+  lastOptions: null,
+  allResults: [],
+  shownStructureIds: [],
+  shownTitles: []
+};
+
+function uniqueMerge(existing, added) {
+  var seen = {};
+  var out = [];
+  existing.concat(added).forEach(function (v) {
+    if (!seen[v]) { seen[v] = true; out.push(v); }
+  });
+  return out;
+}
+
+var els = {};
+
+function $(id) { return document.getElementById(id); }
+
+function scoreTier(score) {
+  if (score >= 90) return "tier-red";
+  if (score >= 70) return "tier-orange";
+  if (score >= 50) return "tier-yellow";
+  return "tier-gray";
+}
+
+function clearChildren(node) {
+  while (node.firstChild) node.removeChild(node.firstChild);
+}
+
+function copyText(text, btn) {
+  function done(ok) {
+    btn.textContent = ok ? "복사됨" : "복사 실패";
+    btn.classList.toggle("copied", ok);
+    setTimeout(function () {
+      btn.textContent = "복사";
+      btn.classList.remove("copied");
+    }, 1500);
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function () { done(true); }, function () { fallbackCopy(text, done); });
+  } else {
+    fallbackCopy(text, done);
+  }
+}
+
+function fallbackCopy(text, done) {
+  var ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed";
+  ta.style.left = "-9999px";
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  var ok = false;
+  try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+  document.body.removeChild(ta);
+  done(ok);
+}
+
+function createResultCard(item, patterns) {
+  var card = document.createElement("div");
+  card.className = "result-card";
+
+  var badge = document.createElement("div");
+  badge.className = "score-badge " + scoreTier(item.score);
+  badge.textContent = String(item.score);
+  card.appendChild(badge);
+
+  var main = document.createElement("div");
+  main.className = "result-main";
+
+  var title = document.createElement("p");
+  title.className = "result-title";
+  title.textContent = item.title;
+  main.appendChild(title);
+
+  var tags = document.createElement("div");
+  tags.className = "reason-tags";
+  var labels = (patterns && patterns.reason_labels) || {};
+  var uniqueReasons = [];
+  for (var i = 0; i < item.reasons.length; i++) {
+    if (uniqueReasons.indexOf(item.reasons[i]) === -1) uniqueReasons.push(item.reasons[i]);
+  }
+  for (i = 0; i < uniqueReasons.length; i++) {
+    var chip = document.createElement("span");
+    chip.className = "reason-tag";
+    chip.textContent = labels[uniqueReasons[i]] || uniqueReasons[i];
+    tags.appendChild(chip);
+  }
+  main.appendChild(tags);
+  card.appendChild(main);
+
+  var copyBtn = document.createElement("button");
+  copyBtn.type = "button";
+  copyBtn.className = "copy-btn";
+  copyBtn.textContent = "복사";
+  copyBtn.setAttribute("aria-label", "제목 복사: " + item.title);
+  copyBtn.addEventListener("click", function () { copyText(item.title, copyBtn); });
+  card.appendChild(copyBtn);
+
+  return card;
+}
+
+function renderLoading(mode) {
+  if (mode !== "append") clearChildren(els.resultsRegion);
+  for (var i = 0; i < 4; i++) {
+    var sk = document.createElement("div");
+    sk.className = "skeleton-card";
+    sk.setAttribute("data-skeleton", "1");
+    els.resultsRegion.appendChild(sk);
+  }
+}
+
+function renderResults(results, patterns) {
+  clearChildren(els.resultsRegion);
+  if (!results.length) {
+    var empty = document.createElement("p");
+    empty.className = "loading-text";
+    empty.textContent = "생성된 제목이 없습니다. 키워드를 다시 확인해 주세요.";
+    els.resultsRegion.appendChild(empty);
+    els.reshuffleBtn.hidden = true;
+    els.loadMoreBtn.hidden = true;
+    return;
+  }
+  for (var i = 0; i < results.length; i++) {
+    els.resultsRegion.appendChild(createResultCard(results[i], patterns));
+  }
+  els.reshuffleBtn.hidden = false;
+  els.loadMoreBtn.hidden = false;
+}
+
+function getSelectedStyle() {
+  var radios = document.getElementsByName("style");
+  for (var i = 0; i < radios.length; i++) {
+    if (radios[i].checked) return radios[i].value;
+  }
+  return "mixed";
+}
+
+function setSelectedStyle(value) {
+  var allowed = { concept: 1, normal: 1, mixed: 1 };
+  if (!allowed[value]) return;
+  var radios = document.getElementsByName("style");
+  for (var i = 0; i < radios.length; i++) {
+    radios[i].checked = (radios[i].value === value);
+  }
+}
+
+function updateUrl(keyword, style, ext) {
+  var params = new URLSearchParams();
+  params.set("q", keyword);
+  params.set("style", style);
+  if (ext) params.set("ext", "1");
+  var newUrl = location.pathname + "?" + params.toString();
+  history.replaceState(null, "", newUrl);
+}
+
+var RESULT_BATCH_SIZE = 8;
+
+function runCalculation(keyword, options, mode) {
+  els.inputError.textContent = "";
+  els.calcBtn.disabled = true;
+  els.loadMoreBtn.disabled = true;
+  renderLoading(mode);
+  var start = (window.performance && performance.now) ? performance.now() : Date.now();
+
+  setTimeout(function () {
+    var newResults = generateTitles(keyword, options, state.patterns);
+    var elapsed = ((window.performance && performance.now) ? performance.now() : Date.now()) - start;
+    var remaining = Math.max(0, 300 - elapsed);
+    setTimeout(function () {
+      if (mode === "append") {
+        state.allResults = state.allResults.concat(newResults);
+      } else {
+        state.allResults = newResults;
+      }
+      state.shownStructureIds = uniqueMerge(mode === "append" ? state.shownStructureIds : [], newResults.map(function (r) { return r.structureId; }));
+      state.shownTitles = uniqueMerge(mode === "append" ? state.shownTitles : [], newResults.map(function (r) { return r.title; }));
+
+      renderResults(state.allResults, state.patterns);
+      els.calcBtn.disabled = false;
+      els.loadMoreBtn.disabled = false;
+      state.lastKeyword = keyword;
+      state.lastOptions = options;
+      updateUrl(keyword, options.style, options.forceExt);
+    }, remaining);
+  }, 0);
+}
+
+function handleCalculate() {
+  var raw = els.keywordInput.value;
+  var kw = sanitizeKeyword(raw);
+  els.keywordInput.value = kw;
+  if (!kw) {
+    els.inputError.textContent = "키워드를 입력해 주세요.";
+    els.keywordInput.focus();
+    return;
+  }
+  var options = {
+    style: getSelectedStyle(),
+    forceExt: els.extCheckbox.checked,
+    count: RESULT_BATCH_SIZE
+  };
+  runCalculation(kw, options, "replace");
+}
+
+function handleReshuffle() {
+  if (!state.lastKeyword) return;
+  var base = state.lastOptions || { style: getSelectedStyle(), forceExt: els.extCheckbox.checked, count: RESULT_BATCH_SIZE };
+  var options = {
+    style: base.style,
+    forceExt: base.forceExt,
+    count: RESULT_BATCH_SIZE,
+    avoidStructureIds: state.shownStructureIds
+  };
+  runCalculation(state.lastKeyword, options, "replace");
+}
+
+function handleLoadMore() {
+  if (!state.lastKeyword) return;
+  var base = state.lastOptions || { style: getSelectedStyle(), forceExt: els.extCheckbox.checked, count: RESULT_BATCH_SIZE };
+  var options = {
+    style: base.style,
+    forceExt: base.forceExt,
+    count: RESULT_BATCH_SIZE,
+    avoidStructureIds: state.shownStructureIds,
+    excludeTitles: state.shownTitles
+  };
+  runCalculation(state.lastKeyword, options, "append");
+}
+
+function loadPatterns() {
+  return fetch("patterns.json", { cache: "no-store" })
+    .then(function (res) {
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return res.json();
+    })
+    .then(function (data) {
+      if (!data || !Array.isArray(data.structures) || !data.slots) throw new Error("invalid schema");
+      return { patterns: data, usedFallback: false };
+    })
+    .catch(function () {
+      return { patterns: FALLBACK_PATTERNS, usedFallback: true };
+    });
+}
+
+function initFromUrl() {
+  var params = new URLSearchParams(location.search);
+  var q = sanitizeKeyword(params.get("q") || "");
+  var styleParam = params.get("style") || "mixed";
+  var extParam = params.get("ext") === "1";
+
+  setSelectedStyle(styleParam);
+  els.extCheckbox.checked = extParam;
+
+  if (q) {
+    els.keywordInput.value = q;
+    handleCalculate();
+  }
+}
+
+function init() {
+  els.keywordInput = $("keywordInput");
+  els.calcForm = $("calcForm");
+  els.calcBtn = $("calcBtn");
+  els.inputError = $("inputError");
+  els.extCheckbox = $("extCheckbox");
+  els.resultsRegion = $("resultsRegion");
+  els.reshuffleBtn = $("reshuffleBtn");
+  els.loadMoreBtn = $("loadMoreBtn");
+  els.dataNotice = $("dataNotice");
+
+  els.calcForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    handleCalculate();
+  });
+  els.keywordInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleCalculate();
+    }
+  });
+  els.reshuffleBtn.addEventListener("click", handleReshuffle);
+  els.loadMoreBtn.addEventListener("click", handleLoadMore);
+
+  loadPatterns().then(function (result) {
+    state.patterns = result.patterns;
+    state.usedFallback = result.usedFallback;
+    if (result.usedFallback) {
+      els.dataNotice.hidden = false;
+      els.dataNotice.textContent = "patterns.json을 불러오지 못해 기본 내장 데이터로 동작 중입니다.";
+    }
+    initFromUrl();
+  });
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}
+</script>
+</body>
+</html>
