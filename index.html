@@ -28,7 +28,7 @@
   - 인라인 스크립트를 직접 수정한 경우 sha256 해시가 바뀌므로, 아래 meta 태그의 해시값을 다시 계산해서 갱신해야
     페이지 스크립트가 정상 동작합니다(README.md 참고).
 -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-WcTc3vmnIZoDY1gOsgcl3x7xR/nyginQPSPTRgL9960=' 'sha256-EyJLTmvrTNLwZk166/hDQA716FPzuFNplOyNnpSbRSA=' 'sha256-af5q/p24PsrlVbVtSIgLu3QRo1QIyrRzTmhSPjLbx34='; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://gi.esmplus.com https://*.coupangcdn.com; connect-src 'self'; base-uri 'none'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-WcTc3vmnIZoDY1gOsgcl3x7xR/nyginQPSPTRgL9960=' 'sha256-EyJLTmvrTNLwZk166/hDQA716FPzuFNplOyNnpSbRSA=' 'sha256-eAGJFs9zev0UAJJpxuIL+8BCj56fgg7YCrGv8TFbL2E='; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://gi.esmplus.com https://*.coupangcdn.com; connect-src 'self'; base-uri 'none'; form-action 'self'">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -751,6 +751,13 @@ function generateTitles(keyword, options, patterns) {
   });
   if (!pool.length) pool = allStructures;
   pool = applyCompatibilityRules(pool, keyword, patterns);
+  if (!options.forceExt) {
+    // 체크박스가 꺼져 있으면 확장자(.jpg/.gif 등)가 붙는 구조 자체를 후보에서 뺀다.
+    // (forceExt=true일 때만 EXT 없는 구조에 확장자를 "추가"하는 게 아니라,
+    //  false일 때 EXT가 원래 있는 구조까지 걸러야 실제로 확장자가 하나도 안 붙는다.)
+    var noExtPool = pool.filter(function (s) { return s.slots.indexOf("EXT") === -1; });
+    if (noExtPool.length) pool = noExtPool;
+  }
   if (!pool.length || !keyword) return [];
 
   var avoidSet = {};
