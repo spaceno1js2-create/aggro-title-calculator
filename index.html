@@ -22,10 +22,13 @@
     광고 스크립트(예: Google AdSense: pagead2.googlesyndication.com, googleads.g.doubleclick.net,
     partner.googleadservices.com / 애드핏: t1.daumcdn.net)를 추가하려면 해당 스크립트 도메인을
     script-src에 추가하고, 광고 네트워크가 요구하는 img-src/connect-src/frame-src 도메인도 함께 추가해야 합니다.
+  - 현재 img-src에는 쿠팡파트너스 배너 이미지 호스트(gi.esmplus.com, 향후 대비용 *.coupangcdn.com)가
+    이미 추가되어 있습니다. 배너는 ads.json으로 데이터화되어 있고 스크립트 없이 <img>만 로드하므로
+    script-src 변경은 필요 없습니다(README "쿠팡 배너 수정하는 법" 참고).
   - 인라인 스크립트를 직접 수정한 경우 sha256 해시가 바뀌므로, 아래 meta 태그의 해시값을 다시 계산해서 갱신해야
     페이지 스크립트가 정상 동작합니다(README.md 참고).
 -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-WcTc3vmnIZoDY1gOsgcl3x7xR/nyginQPSPTRgL9960=' 'sha256-EyJLTmvrTNLwZk166/hDQA716FPzuFNplOyNnpSbRSA=' 'sha256-UVqdoVOueVjYya0LjxgWvougWQWF0/ESYYxG/VWGi7w='; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-WcTc3vmnIZoDY1gOsgcl3x7xR/nyginQPSPTRgL9960=' 'sha256-EyJLTmvrTNLwZk166/hDQA716FPzuFNplOyNnpSbRSA=' 'sha256-6jsJammZuiaamyQZ2iYHDK2GCdkSMN9/z0idCmUIh/E='; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://gi.esmplus.com https://*.coupangcdn.com; connect-src 'self'; base-uri 'none'; form-action 'self'">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -144,6 +147,7 @@ header.site-header p {
   font-size: 14px;
 }
 .ad-slot {
+  position: relative;
   background: var(--ad-bg);
   color: var(--ad-text);
   display: flex;
@@ -153,9 +157,53 @@ header.site-header p {
   border: 1px dashed var(--border);
   border-radius: 6px;
   margin: 16px 0;
+  overflow: hidden;
 }
-.ad-top, .ad-bottom { min-height: 90px; }
-.ad-side { min-height: 250px; width: 100%; }
+.ad-top, .ad-bottom { min-height: 90px; height: 90px; }
+.ad-side { min-height: 250px; height: 250px; width: 100%; }
+.ad-slot.has-ad { border-style: solid; }
+.ad-label {
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  z-index: 2;
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  padding: 3px 6px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  pointer-events: none;
+}
+.ad-link {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.ad-link:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: -3px;
+}
+.ad-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: var(--card-bg);
+}
+.ad-fallback-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  text-align: center;
+}
 .layout {
   display: flex;
   gap: 20px;
@@ -371,8 +419,8 @@ footer.site-footer {
     <p>키워드 하나로 클릭률 높은 커뮤니티 어그로 제목 후보를 만들고 0~100점으로 계산합니다.</p>
   </header>
 
-  <!-- ===== 상단 광고 (728x90 / 모바일 320x100) — 이 div 안에 광고 스크립트 삽입 ===== -->
-  <div class="ad-slot ad-top" id="adTop" aria-hidden="true">광고 영역 (728x90)</div>
+  <!-- ===== 상단 광고 (728x90 / 모바일 320x100) — ads.json의 "top" 항목으로 자동 렌더링. 수정법은 README "쿠팡 배너 수정하는 법" 참고 ===== -->
+  <div class="ad-slot ad-top" id="adTop">광고 영역 (728x90)</div>
   <!-- ===== 상단 광고 끝 ===== -->
 
   <div class="layout">
@@ -438,14 +486,14 @@ footer.site-footer {
     </main>
 
     <aside class="sidebar">
-      <!-- ===== 우측 사이드바 광고 (300x250) — 768px 미만에서는 본문 하단으로 이동 ===== -->
-      <div class="ad-slot ad-side" id="adSide" aria-hidden="true">광고 영역 (300x250)</div>
+      <!-- ===== 우측 사이드바 광고 (300x250) — 768px 미만에서는 본문 하단으로 이동. ads.json의 "sidebar" 항목 ===== -->
+      <div class="ad-slot ad-side" id="adSide">광고 영역 (300x250)</div>
       <!-- ===== 사이드바 광고 끝 ===== -->
     </aside>
   </div>
 
-  <!-- ===== 하단 광고 (728x90) ===== -->
-  <div class="ad-slot ad-bottom" id="adBottom" aria-hidden="true">광고 영역 (728x90)</div>
+  <!-- ===== 하단 광고 (728x90) — ads.json의 "bottom" 항목 ===== -->
+  <div class="ad-slot ad-bottom" id="adBottom">광고 영역 (728x90)</div>
   <!-- ===== 하단 광고 끝 ===== -->
 
   <footer class="site-footer">
@@ -968,6 +1016,88 @@ function handleLoadMore() {
   runCalculation(state.lastKeyword, options, "append");
 }
 
+var AD_ALLOWED_URL_HOSTS = ["link.coupang.com", "coupang.com"];
+var AD_ALLOWED_IMAGE_HOSTS = ["gi.esmplus.com"];
+
+function isAllowedHost(urlString, allowedHosts) {
+  var host;
+  try {
+    host = new URL(urlString, location.href).hostname.toLowerCase();
+  } catch (e) {
+    return false;
+  }
+  for (var i = 0; i < allowedHosts.length; i++) {
+    var h = allowedHosts[i];
+    if (host === h || host.slice(-(h.length + 1)) === "." + h) return true;
+  }
+  return false;
+}
+
+function isValidAd(ad) {
+  if (!ad || typeof ad !== "object") return false;
+  if (!ad.enabled) return false;
+  if (typeof ad.productName !== "string" || !ad.productName.trim()) return false;
+  if (typeof ad.url !== "string" || !/^https:\/\//.test(ad.url) || !isAllowedHost(ad.url, AD_ALLOWED_URL_HOSTS)) return false;
+  if (typeof ad.imageUrl !== "string" || !/^https:\/\//.test(ad.imageUrl) || !isAllowedHost(ad.imageUrl, AD_ALLOWED_IMAGE_HOSTS)) return false;
+  return true;
+}
+
+function renderAdSlot(container, ad, slotKey) {
+  if (!container) return;
+  if (!isValidAd(ad)) {
+    if (ad) {
+      console.warn('[ads] "' + slotKey + '" 광고 데이터가 허용된 도메인 형식을 통과하지 못해 렌더링하지 않았습니다.', ad);
+    }
+    return; // 정적 placeholder(광고 영역 ...) 그대로 유지
+  }
+
+  clearChildren(container);
+  container.classList.add("has-ad");
+
+  var label = document.createElement("span");
+  label.className = "ad-label";
+  label.textContent = "광고";
+  container.appendChild(label);
+
+  var link = document.createElement("a");
+  link.className = "ad-link";
+  link.href = ad.url;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer sponsored";
+  link.setAttribute("aria-label", ad.productName + " (광고, 새 탭에서 열림)");
+
+  var img = document.createElement("img");
+  img.className = "ad-image";
+  img.src = ad.imageUrl;
+  img.alt = ad.productName;
+  img.addEventListener("error", function () {
+    clearChildren(link);
+    var fallback = document.createElement("span");
+    fallback.className = "ad-fallback-text";
+    fallback.textContent = ad.productName;
+    link.appendChild(fallback);
+  });
+
+  link.appendChild(img);
+  container.appendChild(link);
+}
+
+function loadAds() {
+  fetch("ads.json", { cache: "no-store" })
+    .then(function (res) {
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return res.json();
+    })
+    .then(function (data) {
+      renderAdSlot(els.adTop, data && data.top, "top");
+      renderAdSlot(els.adSide, data && data.sidebar, "sidebar");
+      renderAdSlot(els.adBottom, data && data.bottom, "bottom");
+    })
+    .catch(function (err) {
+      console.warn("[ads] ads.json을 불러오지 못해 기본 placeholder를 유지합니다.", err);
+    });
+}
+
 function loadPatterns() {
   return fetch("patterns.json", { cache: "no-store" })
     .then(function (res) {
@@ -1008,6 +1138,9 @@ function init() {
   els.reshuffleBtn = $("reshuffleBtn");
   els.loadMoreBtn = $("loadMoreBtn");
   els.dataNotice = $("dataNotice");
+  els.adTop = $("adTop");
+  els.adSide = $("adSide");
+  els.adBottom = $("adBottom");
 
   els.calcForm.addEventListener("submit", function (e) {
     e.preventDefault();
@@ -1021,6 +1154,8 @@ function init() {
   });
   els.reshuffleBtn.addEventListener("click", handleReshuffle);
   els.loadMoreBtn.addEventListener("click", handleLoadMore);
+
+  loadAds();
 
   loadPatterns().then(function (result) {
     state.patterns = result.patterns;

@@ -12,8 +12,9 @@
 
 | 파일 | 설명 |
 |---|---|
-| `index.html` | CSS/JS가 인라인 포함된 단일 페이지 앱 — **배포되는 건 사실상 이 파일 + patterns.json + robots.txt + sitemap.xml 뿐** |
+| `index.html` | CSS/JS가 인라인 포함된 단일 페이지 앱 — **배포되는 건 사실상 이 파일 + patterns.json + ads.json + robots.txt + sitemap.xml 뿐** |
 | `patterns.json` | 제목 구조/단어 가중치/점수 규칙/슬롯 호환성 규칙 데이터 (코딩 없이 수정 가능) |
+| `ads.json` | 상단/사이드바/하단 쿠팡파트너스 배너 데이터 (코딩 없이 수정 가능) |
 | `robots.txt` | 검색엔진 크롤링 허용 규칙 |
 | `sitemap.xml` | 사이트맵 |
 | `package.json` | `npm run verify`(CSP 해시 검증) / `npm run quality`(품질 검증) 스크립트 정의. 의존성 없음 |
@@ -192,8 +193,44 @@ Jaccard 0.35 이하를 동시에 만족하는 k가 존재하지 않았습니다.
 2. 우측 사이드바 광고 (300x250) — `<div class="ad-slot ad-side" id="adSide">` 내부 (768px 미만에서는 본문 하단으로 자동 이동)
 3. 하단 광고 (728x90) — `<div class="ad-slot ad-bottom" id="adBottom">` 내부
 
-각 `div`는 레이아웃 흔들림(CLS) 방지를 위해 `min-height`가 지정되어 있으니, 실제 광고 태그를
-넣을 때도 이 크기를 벗어나지 않도록 유지하는 것을 권장합니다.
+세 자리 모두 현재 **쿠팡파트너스 이미지 배너**가 `ads.json`을 통해 자동으로 채워지고 있습니다
+(아래 "쿠팡 배너 수정하는 법" 참고). 애드센스 등 스크립트 기반 광고로 바꾸려면 이 `div`들의
+내용을 직접 교체하면 됩니다.
+
+각 `div`는 레이아웃 흔들림(CLS) 방지를 위해 `height`(+`min-height`)가 고정돼 있으니, 실제
+광고 태그를 넣을 때도 이 크기를 벗어나지 않도록 유지하는 것을 권장합니다. (이미지 배너처럼
+`height:100%` 자식 요소를 쓰는 경우, 부모에 `min-height`만 있고 고정 `height`가 없으면 이미지의
+원본 크기만큼 컨테이너가 커져버리는 문제가 있어 `height`를 함께 고정해뒀습니다.)
+
+### 쿠팡 배너 수정하는 법 (코딩 불필요)
+
+세 자리의 상품/링크/이미지는 전부 저장소 루트의 `ads.json` 하나로 관리됩니다. 이 파일만
+고치면 코드를 건드리지 않고 배너를 교체할 수 있습니다.
+
+```json
+{
+  "top":     { "productName": "코비츠 스마트폰 저주파마사지기", "url": "https://link.coupang.com/a/gss5N40Lro", "imageUrl": "https://gi.esmplus.com/suuuuuuu/marketing/bt-701.png", "enabled": true },
+  "sidebar": { "productName": "꿀숨밴드", "url": "https://link.coupang.com/a/gsteYgsu8y", "imageUrl": "https://gi.esmplus.com/suuuuuuu/marketing/ggulsum%20300x250.png", "enabled": true },
+  "bottom":  { "productName": "무지외반증교정기", "url": "https://link.coupang.com/a/gsvetfIZ9o", "imageUrl": "https://gi.esmplus.com/suuuuuuu/marketing/mooji.png", "enabled": true }
+}
+```
+
+- `top`/`sidebar`/`bottom` 키는 위 세 광고 슬롯에 그대로 대응합니다.
+- `productName`: 이미지 로드 실패 시 대신 표시되는 텍스트이자 `alt`/`aria-label`에 쓰이는 상품명.
+- `url`: 클릭 시 이동할 쿠팡파트너스 딥링크. **`link.coupang.com` 또는 `coupang.com` 도메인만
+  허용**됩니다 — 다른 도메인이면 검증에서 걸러져 배너 자체가 렌더링되지 않고 기존
+  placeholder("광고 영역 ...")가 그대로 남습니다(브라우저 콘솔에 경고 로그).
+- `imageUrl`: 배너 이미지 주소. **`gi.esmplus.com` 도메인만 허용**됩니다. 다른 이미지 호스트를
+  쓰려면 `index.html`의 `AD_ALLOWED_IMAGE_HOSTS` 배열에 도메인을 추가하고, CSP `img-src`에도
+  같은 도메인을 추가해야 합니다(둘 다 안 하면 검증 실패 또는 CSP 차단으로 이미지가 안 뜹니다).
+- `enabled`: `false`로 두면 해당 슬롯은 값이 있어도 렌더링하지 않고 placeholder를 유지합니다
+  (배너를 코드 삭제 없이 잠깐 끄고 싶을 때 사용).
+- 이미지가 실제로 로드에 실패하면(깨진 링크 등) 자동으로 `productName` 텍스트 배너로
+  대체되고, 링크와 "광고" 라벨은 그대로 유지됩니다 — 광고 자체가 사라지진 않습니다.
+- 배너 이미지는 `object-fit: contain`으로 렌더링되어 원본 비율이 728x90/300x250과 달라도
+  잘리거나 찌그러지지 않고 여백(레터박스)으로 처리됩니다.
+- 저장 후 새로고침하면 바로 반영됩니다. 수정한 JSON이 유효한지는
+  `python -m json.tool ads.json`으로 확인할 수 있습니다.
 
 > 참고: `frame-ancestors`(클릭재킹 방지)는 `<meta>` 태그로는 브라우저가 무시하므로 이 페이지의
 > CSP meta에는 포함하지 않았습니다. 필요하다면 Cloudflare Pages의 `_headers` 파일 등
