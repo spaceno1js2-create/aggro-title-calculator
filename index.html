@@ -25,7 +25,7 @@
   - 인라인 스크립트를 직접 수정한 경우 sha256 해시가 바뀌므로, 아래 meta 태그의 해시값을 다시 계산해서 갱신해야
     페이지 스크립트가 정상 동작합니다(README.md 참고).
 -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-WcTc3vmnIZoDY1gOsgcl3x7xR/nyginQPSPTRgL9960=' 'sha256-EyJLTmvrTNLwZk166/hDQA716FPzuFNplOyNnpSbRSA=' 'sha256-/0tJD5DAjCFz2TqciiOaYwwNEyeD/hgr9mWbxWoieu4='; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-WcTc3vmnIZoDY1gOsgcl3x7xR/nyginQPSPTRgL9960=' 'sha256-EyJLTmvrTNLwZk166/hDQA716FPzuFNplOyNnpSbRSA=' 'sha256-UVqdoVOueVjYya0LjxgWvougWQWF0/ESYYxG/VWGi7w='; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'self'">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -592,14 +592,27 @@ function buildCandidate(structure, patterns, keyword, options) {
     }
   }
 
+  return { structure: structure, chosen: chosen, title: renderTitle(chosen) };
+}
+
+// PUNCT처럼 "…" 도 말줄임표류 마침표로 취급한다(둘 다 확장자 앞에 추가 마침표가 필요 없음).
+var DOT_LIKE_ENDING = /[.…]$/;
+
+function renderTitle(chosen) {
   var title = "";
   for (var j = 0; j < chosen.length; j++) {
     var c = chosen[j];
-    if (c.attach && title.length) title += c.text;
-    else title += (title.length ? " " : "") + c.text;
+    if (c.attach && title.length) {
+      // EXT(확장자) 직전에 마침표류가 하나도 없으면 정확히 1개를 넣어
+      // "반응!jpg" 같은 마침표 누락을 막는다. PUNCT가 이미 "."/"…"로 끝나면
+      // (예: "...", "..", ".", "…") 그대로 붙여 "...jpg"처럼 중복 마침표를 만들지 않는다.
+      if (c.slot === "EXT" && !DOT_LIKE_ENDING.test(title)) title += ".";
+      title += c.text;
+    } else {
+      title += (title.length ? " " : "") + c.text;
+    }
   }
-
-  return { structure: structure, chosen: chosen, title: title };
+  return title;
 }
 
 function scoreCandidate(candidate, patterns, pool) {
